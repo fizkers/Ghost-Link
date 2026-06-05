@@ -65,49 +65,62 @@
     </div>
 
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="glass-card bg-slate-900/90 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-white/10 space-y-5 transform scale-95 transition-transform duration-300" id="modal-content">
-            <div class="text-center space-y-2">
-                <div id="modal-icon" class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto text-xl">
-                    <i class="fas fa-shield-halved"></i>
+        <div class="glass-card bg-slate-900/90 w-full max-w-md rounded-3xl p-6 shadow-2xl border border-white/10 space-y-5 transform scale-95 transition-transform duration-300" id="modal-content">
+            
+            <div id="password-stage" class="space-y-5">
+                <div class="text-center space-y-2">
+                    <div id="modal-icon" class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto text-xl">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <h3 id="modal-title" class="text-lg font-bold text-slate-100">Konten Terkunci</h3>
+                    <p id="modal-desc" class="text-xs text-slate-400">Masukkan kode akses khusus untuk melihat berkas ini.</p>
                 </div>
-                <h3 id="modal-title" class="text-lg font-bold text-slate-100">Konten Terkunci</h3>
-                <p id="modal-desc" class="text-xs text-slate-400">Masukkan kode akses khusus untuk melihat berkas ini.</p>
-            </div>
-            <div class="space-y-3">
-                <div class="relative" id="input-container">
-                    <i class="fas fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-                    <input type="password" id="input-password" placeholder="Kode Akses" 
-                           class="w-full pl-10 pr-4 py-3 bg-slate-950/50 rounded-xl border border-white/10 focus:outline-none focus:border-cyan-500 text-slate-200 transition text-sm">
+                <div class="space-y-3">
+                    <div class="relative" id="input-container">
+                        <i class="fas fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                        <input type="password" id="input-password" placeholder="Kode Akses" 
+                               class="w-full pl-10 pr-4 py-3 bg-slate-950/50 rounded-xl border border-white/10 focus:outline-none focus:border-cyan-500 text-slate-200 transition text-sm">
+                    </div>
+                    <p id="error-message" class="text-xs text-red-400 text-center font-medium hidden">
+                        <i class="fas fa-circle-exclamation mr-1"></i> <span id="error-text">Password yang Anda masukkan keliru.</span>
+                    </p>
                 </div>
-                <p id="error-message" class="text-xs text-red-400 text-center font-medium hidden">
-                    <i class="fas fa-circle-exclamation mr-1"></i> <span id="error-text">Password yang Anda masukkan keliru.</span>
-                </p>
+                <div class="flex space-x-3 text-sm font-semibold" id="action-buttons">
+                    <button onclick="closePasswordModal()" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl transition">Batal</button>
+                    <button onclick="submitPassword()" class="w-1/2 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition shadow-lg">Buka Akses</button>
+                </div>
             </div>
-            <div class="flex space-x-3 text-sm font-semibold" id="action-buttons">
-                <button onclick="closePasswordModal()" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl transition">Batal</button>
-                <button onclick="submitPassword()" class="w-1/2 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition shadow-lg">Buka Akses</button>
+
+            <div id="video-stage" class="space-y-4 hidden">
+                <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                    <h3 class="text-sm font-semibold text-slate-200"><i class="fas fa-video mr-2 text-cyan-400"></i>Pemutar Video Aman</h3>
+                    <button onclick="closePasswordModal()" class="text-slate-400 hover:text-white transition text-sm px-2 py-1 bg-white/5 rounded-lg">Tutup</button>
+                </div>
+                <div class="overflow-hidden rounded-2xl bg-black border border-white/5 aspect-video w-full flex items-center justify-center">
+                    <video id="internal-player" controls controlsList="nodownload" disablePictureInPicture class="w-full h-full">
+                        <source src="" type="video/mp4">
+                        Browser Anda tidak mendukung pemutar video ini.
+                    </video>
+                </div>
             </div>
+
         </div>
     </div>
 
     <script>
         const MASTER_PASSWORD = "RIA ku sayang bubu 22";
-        const OBFUSCATED_URL = "aHR0cHM6Ly92dWRlbC5kZS9lL2RnNnh3aGdrbm80NXkubXA0"; 
-        const EXPIRATION_DATE = new Date(2026, 5, 9); 
+        
+        // !!! TEMPELKAN URL MP4 BERSIH HASIL INSPECT TADI DI SINI !!!
+        const CLEAN_VIDEO_URL = "https://box.vchod.cc/videos/y23ba6fq8jmu.mp4"; 
+        
+        const EXPIRATION_DATE = new Date(2026, 5, 8); 
 
         let wrongAttemptCount = 0;
         let countdownInterval = null;
 
-        // Validasi Bom Waktu Aktif
+        // Cek Bom Waktu
         if (new Date() > EXPIRATION_DATE) {
-            document.body.innerHTML = `
-                <div class="min-h-screen flex items-center justify-center p-4">
-                    <div class="glass-card max-w-sm w-full p-8 rounded-3xl text-center space-y-4 shadow-2xl border border-white/10">
-                        <div class="w-16 h-16 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mx-auto text-2xl"><i class="fas fa-hourglass-end"></i></div>
-                        <h1 class="text-xl font-bold text-slate-100">Akses Telah Berakhir</h1>
-                        <p class="text-sm text-slate-400 leading-relaxed">Halaman tautan ini sudah melewati batas waktu aktif dan tidak lagi tersedia.</p>
-                    </div>
-                </div>`;
+            document.body.innerHTML = `<div class="min-h-screen flex items-center justify-center p-4"><div class="glass-card max-w-sm w-full p-8 rounded-3xl text-center space-y-4 border border-white/10"><div class="w-16 h-16 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mx-auto text-2xl"><i class="fas fa-hourglass-end"></i></div><h1 class="text-xl font-bold text-slate-100">Akses Telah Berakhir</h1><p class="text-sm text-slate-400 leading-relaxed">Halaman tautan ini sudah melewati batas waktu aktif dan tidak lagi tersedia.</p></div></div>`;
             throw new Error("Expired");
         }
 
@@ -117,30 +130,33 @@
         const errorMsg = document.getElementById('error-message');
         const errorText = document.getElementById('error-text');
         
+        const passwordStage = document.getElementById('password-stage');
+        const videoStage = document.getElementById('video-stage');
+        const videoPlayer = document.getElementById('internal-player');
+
         const modalIcon = document.getElementById('modal-icon');
         const modalTitle = document.getElementById('modal-title');
         const modalDesc = document.getElementById('modal-desc');
         const inputContainer = document.getElementById('input-container');
         const actionButtons = document.getElementById('action-buttons');
 
-        // Cek apakah user sedang dalam masa hukuman saat halaman dimuat/di-refresh
         window.addEventListener('load', checkLockoutStatus);
 
         function checkLockoutStatus() {
             const lockUntil = localStorage.getItem('ghost_lock_until');
-            if (lockUntil) {
-                const timeLeft = parseInt(lockUntil) - Date.now();
-                if (timeLeft > 0) {
-                    startLockoutUI(timeLeft);
-                } else {
-                    localStorage.removeItem('ghost_lock_until');
-                }
+            if (lockUntil && (parseInt(lockUntil) - Date.now() > 0)) {
+                startLockoutUI(parseInt(lockUntil) - Date.now());
             }
         }
 
         function openPasswordModal() {
             inputField.value = "";
             errorMsg.classList.add('hidden');
+            passwordStage.classList.remove('hidden');
+            videoStage.classList.add('hidden');
+            videoPlayer.pause();
+            videoPlayer.src = "";
+            
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modalContent.classList.remove('scale-95');
             
@@ -156,11 +172,12 @@
         function closePasswordModal() {
             modal.classList.add('opacity-0', 'pointer-events-none');
             modalContent.classList.add('scale-95');
+            videoPlayer.pause();
+            videoPlayer.src = "";
             if (countdownInterval) clearInterval(countdownInterval);
         }
 
         function submitPassword() {
-            // Jika sistem sedang terkunci, abaikan klik tombol
             if (localStorage.getItem('ghost_lock_until') && (parseInt(localStorage.getItem('ghost_lock_until')) - Date.now() > 0)) return;
 
             const userEntered = inputField.value.trim();
@@ -168,81 +185,61 @@
             if (userEntered === MASTER_PASSWORD) {
                 wrongAttemptCount = 0;
                 errorMsg.classList.add('hidden');
-                closePasswordModal();
-                window.open(atob(OBFUSCATED_URL), '_blank');
+                
+                // Masuk ke mode video player internal
+                passwordStage.classList.add('hidden');
+                videoStage.classList.remove('hidden');
+                
+                // Muat link video secara dinamis dan putar otomatis
+                videoPlayer.src = CLEAN_VIDEO_URL;
+                videoPlayer.load();
+                videoPlayer.play();
             } else {
                 wrongAttemptCount++;
-                
-                if (wrongAttemptCount === 1) {
-                    errorText.innerText = "Password yang Anda masukkan keliru.";
-                    errorMsg.classList.remove('hidden');
-                } else if (wrongAttemptCount === 2) {
-                    errorText.innerText = "seperti nya kamu mulai mencurigakan";
-                    errorMsg.classList.remove('hidden');
-                } else if (wrongAttemptCount === 3) {
-                    errorText.innerText = "Kamu pencuri ya?";
-                    errorMsg.classList.remove('hidden');
-                } else if (wrongAttemptCount === 4) {
-                    closePasswordModal();
-                    inputField.value = "";
-                    setTimeout(() => { window.location.reload(); }, 300);
-                    return;
-                } else if (wrongAttemptCount >= 5) {
-                    // Kesalahan ke-5: Kunci selama 5 menit (5 * 60 * 1000 ms)
-                    const lockTimeDuration = 5 * 60 * 1000;
-                    const lockUntilTime = Date.now() + lockTimeDuration;
-                    localStorage.setItem('ghost_lock_until', lockUntilTime);
-                    wrongAttemptCount = 0; // Reset hitungan
-                    
-                    startLockoutUI(lockTimeDuration);
+                if (wrongAttemptCount === 1) { errorText.innerText = "Password yang Anda masukkan keliru."; errorMsg.classList.remove('hidden'); }
+                else if (wrongAttemptCount === 2) { errorText.innerText = "seperti nya kamu mulai mencurigakan"; errorMsg.classList.remove('hidden'); }
+                else if (wrongAttemptCount === 3) { errorText.innerText = "Kamu pencuri ya?"; errorMsg.classList.remove('hidden'); }
+                else if (wrongAttemptCount === 4) { closePasswordModal(); inputField.value = ""; setTimeout(() => { window.location.reload(); }, 300); return; }
+                else if (wrongAttemptCount >= 5) {
+                    localStorage.setItem('ghost_lock_until', Date.now() + (5 * 60 * 1000));
+                    wrongAttemptCount = 0;
+                    startLockoutUI(5 * 60 * 1000);
                     return;
                 }
-
                 inputField.classList.add('border-red-500', 'animate-pulse');
                 setTimeout(() => { inputField.classList.remove('border-red-500', 'animate-pulse'); }, 1000);
             }
         }
 
-        // Fungsi mengubah UI Modal menjadi mode Terkunci (Banned)
         function startLockoutUI(duration) {
             if (countdownInterval) clearInterval(countdownInterval);
-            
             errorMsg.classList.add('hidden');
             inputContainer.classList.add('hidden');
             actionButtons.classList.add('hidden');
-            
             modalIcon.className = "w-12 h-12 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto text-xl animate-pulse";
             modalIcon.innerHTML = `<i class="fas fa-ban"></i>`;
             modalTitle.innerText = "Akses Diblokir Sementara";
-            
             updateTimerText(duration);
 
             countdownInterval = setInterval(() => {
-                const lockUntil = localStorage.getItem('ghost_lock_until');
-                const timeLeft = parseInt(lockUntil) - Date.now();
-                
+                const timeLeft = parseInt(localStorage.getItem('ghost_lock_until')) - Date.now();
                 if (timeLeft <= 0) {
                     clearInterval(countdownInterval);
                     localStorage.removeItem('ghost_lock_until');
                     restoreNormalUI();
-                } else {
-                    updateTimerText(timeLeft);
-                }
+                } else { updateTimerText(timeLeft); }
             }, 1000);
         }
 
         function updateTimerText(ms) {
-            const minutes = Math.floor(ms / 60000);
-            const seconds = Math.floor((ms % 60000) / 1000);
-            const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
-            modalDesc.innerHTML = `Terlalu banyak percobaan salah.<br><span class="text-red-400 font-bold text-sm tracking-wider">Coba lagi dalam ${minutes}:${formattedSeconds}</span>`;
+            const min = Math.floor(ms / 60000);
+            const sec = Math.floor((ms % 60000) / 1000);
+            modalDesc.innerHTML = `Terlalu banyak percobaan salah.<br><span class="text-red-400 font-bold text-sm">Coba lagi dalam ${min}:${sec < 10 ? '0' + sec : sec}</span>`;
         }
 
-        // Fungsi mengembalikan UI Modal ke kondisi normal setelah durasi selesai
         function restoreNormalUI() {
             inputContainer.classList.remove('hidden');
             actionButtons.classList.remove('hidden');
-            
             modalIcon.className = "w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto text-xl";
             modalIcon.innerHTML = `<i class="fas fa-shield-halved"></i>`;
             modalTitle.innerText = "Konten Terkunci";
